@@ -4,16 +4,30 @@ import { useEffect, useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { Product, getProducts } from '@/lib/storage';
+import { Product } from '@/lib/storage';
 import { MagnifyingGlassIcon, FunnelIcon, SparklesIcon, TruckIcon, ShieldCheckIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setProducts(getProducts());
+    async function fetchProducts() {
+      try {
+        const response = await fetch('/api/products');
+        if (response.ok) {
+          const data = await response.json();
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
   }, []);
 
   // Get unique categories from products
@@ -205,7 +219,16 @@ export default function Home() {
             </h2>
           </div>
 
-          {products.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-2xl p-16 text-center shadow-lg border border-gray-100">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <SparklesIcon className="w-12 h-12 text-gray-400" />
+              </div>
+              <p className="text-gray-500 text-xl mb-4 font-semibold">
+                Memuat produk...
+              </p>
+            </div>
+          ) : products.length === 0 ? (
             <div className="bg-white rounded-2xl p-16 text-center shadow-lg border border-gray-100">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <SparklesIcon className="w-12 h-12 text-gray-400" />

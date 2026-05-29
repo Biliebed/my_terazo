@@ -42,3 +42,5 @@ next-env.d.ts
 
 # database (JSON files)
 /data/*.json
+
+/lib/generated/prisma

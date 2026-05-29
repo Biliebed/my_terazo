@@ -1,35 +1,37 @@
-import { NextResponse } from 'next/server';
-import { getOrder, updateOrder } from '@/lib/db';
+import { NextResponse } from 'next/server'
+import { getOrder, updateOrder } from '@/lib/storage-db'
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const order = getOrder(id);
+    const params = await context.params
+    const order = await getOrder(params.id)
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
-    return NextResponse.json(order);
+    return NextResponse.json(order)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 });
+    console.error('Error fetching order:', error)
+    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 })
   }
 }
 
-export async function PUT(
+export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const order = updateOrder(id, body);
+    const params = await context.params
+    const body = await request.json()
+    const order = await updateOrder(params.id, body)
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
-    return NextResponse.json(order);
+    return NextResponse.json(order)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
+    console.error('Error updating order:', error)
+    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
   }
 }
