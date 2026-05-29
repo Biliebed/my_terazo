@@ -151,22 +151,31 @@ export default function AdminPage() {
         });
         
         if (!res.ok) {
-          throw new Error('Failed to update product');
+          const errorData = await res.json();
+          console.error('Update error response:', errorData);
+          throw new Error(errorData.message || errorData.error || 'Failed to update product');
         }
         
         alert('✅ Produk berhasil diupdate!');
       } else {
         // Create
+        console.log('Sending product data:', productData);
         const res = await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData),
         });
         
+        console.log('Response status:', res.status);
+        
         if (!res.ok) {
-          throw new Error('Failed to create product');
+          const errorData = await res.json();
+          console.error('Create error response:', errorData);
+          throw new Error(errorData.message || errorData.error || 'Failed to create product');
         }
         
+        const result = await res.json();
+        console.log('Product created:', result);
         alert('✅ Produk berhasil ditambahkan!');
       }
 
@@ -180,7 +189,7 @@ export default function AdminPage() {
       await loadProducts();
     } catch (error) {
       console.error('Submit error:', error);
-      alert('❌ Gagal menyimpan produk. Coba lagi.');
+      alert(`❌ Gagal menyimpan produk: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSubmitting(false);
     }
