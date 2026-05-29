@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -66,14 +67,18 @@ export default function AdminPage() {
     // Validate file type
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      alert('Format file tidak valid. Hanya PNG, JPG, dan WEBP yang diperbolehkan.');
+      alert('❌ Format file tidak valid. Hanya PNG, JPG, dan WEBP yang diperbolehkan.');
+      e.target.value = ''; // Reset input
       return;
     }
 
     // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    
     if (file.size > maxSize) {
-      alert('Ukuran file terlalu besar. Maksimal 5MB.');
+      alert(`❌ Ukuran file terlalu besar (${fileSizeMB} MB).\nMaksimal 5 MB. Silakan pilih gambar yang lebih kecil.`);
+      e.target.value = ''; // Reset input
       return;
     }
 
@@ -103,10 +108,14 @@ export default function AdminPage() {
 
       const data = await res.json();
       setFormData(prev => ({ ...prev, image: data.url }));
+      
+      // Success notification
+      alert(`✅ Gambar berhasil diupload! (${fileSizeMB} MB)`);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Gagal upload gambar. Coba lagi.');
+      alert('❌ Gagal upload gambar. Coba lagi.');
       setImagePreview('');
+      e.target.value = ''; // Reset input
     } finally {
       setUploading(false);
     }
@@ -114,6 +123,14 @@ export default function AdminPage() {
 
   const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate image
+    if (!formData.image) {
+      alert('❌ Silakan upload gambar produk terlebih dahulu.');
+      return;
+    }
+    
+    setSubmitting(true);
     
     const productData = {
       name: formData.name,
@@ -124,27 +141,49 @@ export default function AdminPage() {
       category: formData.category,
     };
 
-    if (editingProduct) {
-      // Update
-      await fetch(`/api/products/${editingProduct.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
-      });
-    } else {
-      // Create
-      await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
-      });
-    }
+    try {
+      if (editingProduct) {
+        // Update
+        const res = await fetch(`/api/products/${editingProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to update product');
+        }
+        
+        alert('✅ Produk berhasil diupdate!');
+      } else {
+        // Create
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
+        
+        if (!res.ok) {
+          throw new Error('Failed to create product');
+        }
+        
+        alert('✅ Produk berhasil ditambahkan!');
+      }
 
-    setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
-    setEditingProduct(null);
-    setShowProductForm(false);
-    setImagePreview('');
-    loadProducts();
+      // Reset form
+      setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
+      setEditingProduct(null);
+      setShowProductForm(false);
+      setImagePreview('');
+      
+      // Reload products
+      await loadProducts();
+    } catch (error) {
+      console.error('Submit error:', error);
+      alert('❌ Gagal menyimpan produk. Coba lagi.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleEditProduct = (product: Product) => {
@@ -333,9 +372,10 @@ export default function AdminPage() {
                   <div className="flex gap-4">
                     <button
                       type="submit"
-                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                      disabled={uploading || submitting}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {editingProduct ? 'Update Produk' : 'Simpan Produk'}
+                      {submitting ? 'Menyimpan...' : (editingProduct ? 'Update Produk' : 'Simpan Produk')}
                     </button>
                     {editingProduct && (
                       <button
