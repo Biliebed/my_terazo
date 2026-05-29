@@ -38,7 +38,17 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background with Floating Shapes */}
+      <div className="fixed inset-0 -z-10 gradient-bg">
+        <div className="floating-shape"></div>
+        <div className="floating-shape"></div>
+        <div className="floating-shape"></div>
+      </div>
+      
+      {/* Mesh Gradient Overlay */}
+      <div className="fixed inset-0 -z-10 mesh-bg opacity-50"></div>
+      
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
@@ -118,7 +128,7 @@ export default function Home() {
         </div>
 
         {/* Search & Filter Section - Enhanced */}
-        <div id="products" className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+        <div id="products" className="glass rounded-2xl shadow-2xl p-8 mb-8 border border-white border-opacity-50 backdrop-blur-xl">
           <div className="flex items-center gap-3 mb-6">
             <FunnelIcon className="w-7 h-7 text-blue-600" />
             <h2 className="text-2xl font-bold text-gray-800">Cari & Filter Produk</h2>
