@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { signOut } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
 import { Product, Order } from '@/lib/db';
 
@@ -136,7 +137,15 @@ export default function AdminPage() {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <button
+            onClick={() => signOut({ callbackUrl: '/admin/login' })}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-semibold"
+          >
+            Logout
+          </button>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-4 mb-6">
