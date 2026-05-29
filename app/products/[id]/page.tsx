@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { Product } from '@/lib/db';
+import { Product, getProduct } from '@/lib/storage';
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -19,13 +19,9 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
   useEffect(() => {
     if (!resolvedParams) return;
     
-    fetch(`/api/products/${resolvedParams.id}`)
-      .then(res => res.json())
-      .then(data => {
-        setProduct(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    const productData = getProduct(resolvedParams.id);
+    setProduct(productData || null);
+    setLoading(false);
   }, [resolvedParams]);
 
   const formatPrice = (price: number) => {

@@ -1,9 +1,16 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import ProductCard from '@/components/ProductCard';
-import { getProducts } from '@/lib/db';
+import { Product, getProducts } from '@/lib/storage';
 
 export default function Home() {
-  const products = getProducts();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    setProducts(getProducts());
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

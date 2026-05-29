@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
-import { Product, Order } from '@/lib/db';
+import { Product, Order, getProducts, createProduct, updateProduct, deleteProduct, getOrders, updateOrder } from '@/lib/storage';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
@@ -31,14 +31,12 @@ export default function AdminPage() {
   }, []);
 
   const loadProducts = async () => {
-    const res = await fetch('/api/products');
-    const data = await res.json();
+    const data = getProducts();
     setProducts(data);
   };
 
   const loadOrders = async () => {
-    const res = await fetch('/api/orders');
-    const data = await res.json();
+    const data = getOrders();
     const sorted = data.sort((a: Order, b: Order) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -144,38 +142,19 @@ export default function AdminPage() {
     try {
       if (editingProduct) {
         // Update
-        const res = await fetch(`/api/products/${editingProduct.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productData),
-        });
+        console.log('Updating product:', productData);
+        const updated = updateProduct(editingProduct.id, productData);
         
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error('Update error response:', errorData);
-          throw new Error(errorData.message || errorData.error || 'Failed to update product');
+        if (!updated) {
+          throw new Error('Failed to update product');
         }
         
         alert('✅ Produk berhasil diupdate!');
       } else {
         // Create
-        console.log('Sending product data:', productData);
-        const res = await fetch('/api/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productData),
-        });
-        
-        console.log('Response status:', res.status);
-        
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error('Create error response:', errorData);
-          throw new Error(errorData.message || errorData.error || 'Failed to create product');
-        }
-        
-        const result = await res.json();
-        console.log('Product created:', result);
+        console.log('Creating product:', productData);
+        const created = createProduct(productData);
+        console.log('Product created:', created);
         alert('✅ Produk berhasil ditambahkan!');
       }
 
@@ -212,16 +191,12 @@ export default function AdminPage() {
   const handleDeleteProduct = async (id: string) => {
     if (!confirm('Yakin ingin menghapus produk ini?')) return;
     
-    await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    deleteProduct(id);
     loadProducts();
   };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    await fetch(`/api/orders/${orderId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
+    updateOrder(orderId, { status: newStatus });
     loadOrders();
   };
 
