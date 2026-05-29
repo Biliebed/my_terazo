@@ -5,14 +5,10 @@ import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon } from '@heroicons/react
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10 gradient-bg">
-        <div className="floating-shape"></div>
-        <div className="floating-shape"></div>
-        <div className="floating-shape"></div>
-      </div>
-      <div className="fixed inset-0 -z-10 mesh-bg opacity-50"></div>
+    <div className="min-h-screen relative">
+      {/* Terrazzo Texture Background */}
+      <div className="fixed inset-0 -z-10 terrazzo-texture"></div>
+      <div className="fixed inset-0 -z-10 terrazzo-overlay"></div>
       
       <Navbar />
       
@@ -28,7 +24,7 @@ export default function ContactPage() {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Contact Information */}
           <div className="space-y-6">
-            <div className="glass rounded-2xl shadow-2xl p-6 border border-white border-opacity-50">
+            <div className="glass-terrazzo rounded-2xl shadow-xl p-6">
               <h2 className="text-2xl font-bold mb-6">Informasi Kontak</h2>
               
               {/* Address */}
@@ -103,7 +99,7 @@ export default function ContactPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="glass rounded-2xl shadow-2xl p-6 border border-white border-opacity-50">
+            <div className="glass-terrazzo rounded-2xl shadow-xl p-6">
               <h2 className="text-xl font-bold mb-4">Hubungi Kami Sekarang</h2>
               <div className="space-y-3">
                 <a
@@ -128,7 +124,7 @@ export default function ContactPage() {
           </div>
 
           {/* Google Maps */}
-          <div className="glass rounded-2xl shadow-2xl p-6 border border-white border-opacity-50">
+          <div className="glass-terrazzo rounded-2xl shadow-xl p-6">
             <h2 className="text-2xl font-bold mb-4">Lokasi Kami</h2>
             <div className="aspect-video rounded-lg overflow-hidden mb-4">
               <iframe

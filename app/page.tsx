@@ -38,16 +38,10 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Animated Background with Floating Shapes */}
-      <div className="fixed inset-0 -z-10 gradient-bg">
-        <div className="floating-shape"></div>
-        <div className="floating-shape"></div>
-        <div className="floating-shape"></div>
-      </div>
-      
-      {/* Mesh Gradient Overlay */}
-      <div className="fixed inset-0 -z-10 mesh-bg opacity-50"></div>
+    <div className="min-h-screen relative">
+      {/* Terrazzo Texture Background */}
+      <div className="fixed inset-0 -z-10 terrazzo-texture"></div>
+      <div className="fixed inset-0 -z-10 terrazzo-overlay"></div>
       
       <Navbar />
       
@@ -128,7 +122,7 @@ export default function Home() {
         </div>
 
         {/* Search & Filter Section - Enhanced */}
-        <div id="products" className="glass rounded-2xl shadow-2xl p-8 mb-8 border border-white border-opacity-50 backdrop-blur-xl">
+        <div id="products" className="glass-terrazzo rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <FunnelIcon className="w-7 h-7 text-blue-600" />
             <h2 className="text-2xl font-bold text-gray-800">Cari & Filter Produk</h2>
