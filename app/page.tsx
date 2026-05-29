@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { Product, getProducts } from '@/lib/storage';
 
@@ -158,14 +159,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="bg-gray-800 text-white py-6 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <p>&copy; 2026 My Terazo. All rights reserved.</p>
-          <p className="text-gray-400 text-sm mt-2">
-            Jl. Dakota (Sebrang Dakota Society), Rembiga, Mataram, NTB
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -25,6 +25,9 @@ export default function Navbar() {
             <Link href="/orders" className="hover:text-blue-200 transition">
               Pesanan Saya
             </Link>
+            <Link href="/contact" className="hover:text-blue-200 transition">
+              Kontak
+            </Link>
             <Link href="/admin" className="hover:text-blue-200 transition">
               Admin
             </Link>
