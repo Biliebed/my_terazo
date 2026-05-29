@@ -1,4 +1,3 @@
-import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -31,12 +30,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upload to Vercel Blob
-    const blob = await put(file.name, file, {
-      access: 'public',
-    });
+    // Convert to base64 (embedded image)
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
-    return NextResponse.json({ url: blob.url });
+    return NextResponse.json({ url: dataUrl });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
