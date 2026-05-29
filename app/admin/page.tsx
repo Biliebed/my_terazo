@@ -11,6 +11,8 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string>('');
   
   // Form states
   const [formData, setFormData] = useState({
@@ -57,6 +59,59 @@ export default function AdminPage() {
     });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Format file tidak valid. Hanya PNG, JPG, dan WEBP yang diperbolehkan.');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('Ukuran file terlalu besar. Maksimal 5MB.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to server
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const data = await res.json();
+      setFormData(prev => ({ ...prev, image: data.url }));
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Gagal upload gambar. Coba lagi.');
+      setImagePreview('');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmitProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -88,6 +143,7 @@ export default function AdminPage() {
     setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
     setEditingProduct(null);
     setShowProductForm(false);
+    setImagePreview('');
     loadProducts();
   };
 
@@ -101,6 +157,7 @@ export default function AdminPage() {
       image: product.image,
       category: product.category,
     });
+    setImagePreview(product.image);
     setShowProductForm(true);
   };
 
@@ -180,6 +237,7 @@ export default function AdminPage() {
                   setShowProductForm(!showProductForm);
                   setEditingProduct(null);
                   setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
+                  setImagePreview('');
                 }}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
               >
@@ -248,14 +306,29 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">URL Gambar</label>
+                    <label className="block text-gray-700 font-semibold mb-2">Gambar Produk</label>
                     <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={handleImageUpload}
                       className="w-full border rounded-lg px-4 py-2"
-                      placeholder="https://example.com/image.jpg"
+                      disabled={uploading}
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Format: PNG, JPG, WEBP. Maksimal 5MB.
+                    </p>
+                    {uploading && (
+                      <p className="text-sm text-blue-600 mt-2">Uploading...</p>
+                    )}
+                    {(imagePreview || formData.image) && (
+                      <div className="mt-3">
+                        <img
+                          src={imagePreview || formData.image}
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded border"
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-4">
                     <button
@@ -271,6 +344,7 @@ export default function AdminPage() {
                           setEditingProduct(null);
                           setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
                           setShowProductForm(false);
+                          setImagePreview('');
                         }}
                         className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400"
                       >
