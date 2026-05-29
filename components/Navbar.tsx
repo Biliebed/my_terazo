@@ -1,6 +1,13 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith('/admin');
+
   return (
     <nav className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4">
@@ -8,7 +15,7 @@ export default function Navbar() {
           <Link href="/" className="text-2xl font-bold">
             My Terazo
           </Link>
-          <div className="flex gap-6">
+          <div className="flex items-center gap-6">
             <Link href="/" className="hover:text-blue-200 transition">
               Produk
             </Link>
@@ -21,6 +28,7 @@ export default function Navbar() {
             <Link href="/admin" className="hover:text-blue-200 transition">
               Admin
             </Link>
+            {isAdminPage && <NotificationBell />}
           </div>
         </div>
       </div>

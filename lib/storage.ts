@@ -7,6 +7,7 @@ export interface Product {
   stock: number;
   image: string;
   category: string;
+  discount?: number; // Discount percentage (0-100)
   createdAt: string;
 }
 
@@ -28,6 +29,7 @@ export interface Order {
   paymentMethod: 'transfer' | 'cod' | 'cash';
   paymentProof?: string;
   notes?: string;
+  isRead?: boolean; // For admin notification
   createdAt: string;
   updatedAt: string;
 }
@@ -135,4 +137,28 @@ export function updateOrder(id: string, updates: Partial<Order>): Order | null {
   };
   saveToStorage(ORDERS_KEY, orders);
   return orders[index];
+}
+
+// Helper functions for discount
+export function calculateDiscountedPrice(price: number, discount?: number): number {
+  if (!discount || discount <= 0) return price;
+  return Math.round(price * (1 - discount / 100));
+}
+
+export function getUnreadOrdersCount(): number {
+  const orders = getOrders();
+  return orders.filter(o => !o.isRead && o.status === 'pending').length;
+}
+
+export function markOrderAsRead(id: string): void {
+  updateOrder(id, { isRead: true });
+}
+
+export function markAllOrdersAsRead(): void {
+  const orders = getOrders();
+  orders.forEach(order => {
+    if (!order.isRead) {
+      updateOrder(order.id, { isRead: true });
+    }
+  });
 }

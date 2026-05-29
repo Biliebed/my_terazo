@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
-import { Product, Order, getProducts, createProduct, updateProduct, deleteProduct, getOrders, updateOrder } from '@/lib/storage';
+import { Product, Order, getProducts, createProduct, updateProduct, deleteProduct, getOrders, updateOrder, markAllOrdersAsRead } from '@/lib/storage';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
@@ -23,12 +23,19 @@ export default function AdminPage() {
     stock: '',
     image: '',
     category: '',
+    discount: '',
   });
 
   useEffect(() => {
     loadProducts();
     loadOrders();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      loadOrders();
+    }
+  }, [activeTab]);
 
   const loadProducts = async () => {
     const data = getProducts();
@@ -41,6 +48,11 @@ export default function AdminPage() {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     setOrders(sorted);
+    
+    // Mark all orders as read when viewing orders tab
+    if (activeTab === 'orders') {
+      markAllOrdersAsRead();
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -137,6 +149,7 @@ export default function AdminPage() {
       stock: parseInt(formData.stock),
       image: formData.image,
       category: formData.category,
+      discount: formData.discount ? parseFloat(formData.discount) : undefined,
     };
 
     try {
@@ -159,7 +172,7 @@ export default function AdminPage() {
       }
 
       // Reset form
-      setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
+      setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '', discount: '' });
       setEditingProduct(null);
       setShowProductForm(false);
       setImagePreview('');
@@ -183,6 +196,7 @@ export default function AdminPage() {
       stock: product.stock.toString(),
       image: product.image,
       category: product.category,
+      discount: product.discount?.toString() || '',
     });
     setImagePreview(product.image);
     setShowProductForm(true);
@@ -259,7 +273,7 @@ export default function AdminPage() {
                 onClick={() => {
                   setShowProductForm(!showProductForm);
                   setEditingProduct(null);
-                  setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
+                  setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '', discount: '' });
                   setImagePreview('');
                 }}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
@@ -329,6 +343,21 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
+                    <label className="block text-gray-700 font-semibold mb-2">Diskon (%)</label>
+                    <input
+                      type="number"
+                      value={formData.discount}
+                      onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                      className="w-full border rounded-lg px-4 py-2"
+                      placeholder="Contoh: 10, 20, 50 (opsional)"
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Kosongkan jika tidak ada diskon. Maksimal 100%.
+                    </p>
+                  </div>
+                  <div>
                     <label className="block text-gray-700 font-semibold mb-2">Gambar Produk</label>
                     <input
                       type="file"
@@ -366,7 +395,7 @@ export default function AdminPage() {
                         type="button"
                         onClick={() => {
                           setEditingProduct(null);
-                          setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '' });
+                          setFormData({ name: '', description: '', price: '', stock: '', image: '', category: '', discount: '' });
                           setShowProductForm(false);
                           setImagePreview('');
                         }}

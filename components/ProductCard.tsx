@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Product } from '@/lib/db';
+import { Product, calculateDiscountedPrice } from '@/lib/storage';
 
 interface ProductCardProps {
   product: Product;
@@ -13,6 +13,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       minimumFractionDigits: 0,
     }).format(price);
   };
+
+  const hasDiscount = product.discount && product.discount > 0;
+  const discountedPrice = hasDiscount ? calculateDiscountedPrice(product.price, product.discount) : product.price;
 
   return (
     <Link href={`/products/${product.id}`}>
@@ -29,19 +32,43 @@ export default function ProductCard({ product }: ProductCardProps) {
               No Image
             </div>
           )}
+          
+          {/* Discount Badge */}
+          {hasDiscount && (
+            <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
+              🔥 -{product.discount}%
+            </div>
+          )}
+          
+          {/* Out of Stock Overlay */}
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <span className="text-white font-bold text-xl">Stok Habis</span>
             </div>
           )}
         </div>
+        
         <div className="p-4">
           <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.name}</h3>
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+          
           <div className="flex justify-between items-center">
-            <span className="text-xl font-bold text-blue-600">
-              {formatPrice(product.price)}
-            </span>
+            <div className="flex flex-col">
+              {hasDiscount ? (
+                <>
+                  <span className="text-sm text-gray-400 line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="text-xl font-bold text-red-600">
+                    {formatPrice(discountedPrice)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xl font-bold text-blue-600">
+                  {formatPrice(product.price)}
+                </span>
+              )}
+            </div>
             <span className="text-sm text-gray-500">
               Stok: {product.stock}
             </span>
