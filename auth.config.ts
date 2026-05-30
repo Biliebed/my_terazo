@@ -52,7 +52,7 @@ export default {
     }),
   ],
   pages: {
-    signIn: "/admin/login",
+    signIn: "/login",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -69,17 +69,37 @@ export default {
     },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const isOnLogin = nextUrl.pathname === "/login";
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
-      const isOnLogin = nextUrl.pathname === "/admin/login";
       const userRole = auth?.user?.role;
 
-      // Admin pages require admin role
-      if (isOnAdmin && !isOnLogin) {
-        if (!isLoggedIn) return false;
-        if (userRole !== "admin") return false;
+      // Allow access to login page
+      if (isOnLogin) {
+        // If already logged in, redirect based on role
+        if (isLoggedIn) {
+          if (userRole === "admin") {
+            return Response.redirect(new URL("/admin", nextUrl));
+          }
+          return Response.redirect(new URL("/", nextUrl));
+        }
         return true;
       }
 
+      // Require login for all other pages
+      if (!isLoggedIn) {
+        return false; // Redirect to login
+      }
+
+      // Admin pages require admin role
+      if (isOnAdmin) {
+        if (userRole !== "admin") {
+          // User trying to access admin, redirect to homepage
+          return Response.redirect(new URL("/", nextUrl));
+        }
+        return true;
+      }
+
+      // Regular users can access non-admin pages
       return true;
     },
   },
