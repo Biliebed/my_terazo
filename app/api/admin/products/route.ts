@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createProduct, updateProduct, deleteProduct } from '@/lib/storage-db'
 
+// Force dynamic rendering (no static generation)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
