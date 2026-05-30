@@ -1,9 +1,23 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-// Hardcoded admin credentials (nanti bisa pindah ke database)
-const ADMIN_EMAIL = "admin@myterazo.com";
-const ADMIN_PASSWORD = "admin123"; // Simple password untuk demo
+// Demo users (nanti bisa pindah ke database)
+const DEMO_USERS = [
+  {
+    id: "1",
+    email: "admin@myterazo.com",
+    password: "admin123",
+    name: "Admin My Terazo",
+    role: "admin",
+  },
+  {
+    id: "2",
+    email: "user@myterazo.com",
+    password: "user123",
+    name: "User Demo",
+    role: "user",
+  },
+];
 
 export default {
   providers: [
@@ -17,16 +31,19 @@ export default {
           return null;
         }
 
-        // Check if email and password match admin
-        if (
-          credentials.email === ADMIN_EMAIL &&
-          credentials.password === ADMIN_PASSWORD
-        ) {
+        // Find user by email and password
+        const user = DEMO_USERS.find(
+          (u) =>
+            u.email === credentials.email &&
+            u.password === credentials.password
+        );
+
+        if (user) {
           return {
-            id: "1",
-            email: ADMIN_EMAIL,
-            name: "Admin",
-            role: "admin",
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
           };
         }
 
@@ -38,13 +55,28 @@ export default {
     signIn: "/admin/login",
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.role = token.role as string;
+      }
+      return session;
+    },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
       const isOnLogin = nextUrl.pathname === "/admin/login";
+      const userRole = auth?.user?.role;
 
+      // Admin pages require admin role
       if (isOnAdmin && !isOnLogin) {
         if (!isLoggedIn) return false;
+        if (userRole !== "admin") return false;
         return true;
       }
 

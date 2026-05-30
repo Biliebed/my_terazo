@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -26,7 +27,16 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Email atau password salah");
       } else {
-        router.push("/admin");
+        // Get session to check role
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+        
+        // Redirect based on role
+        if (session?.user?.role === 'admin') {
+          router.push("/admin");
+        } else {
+          router.push("/"); // User goes to homepage
+        }
         router.refresh();
       }
     } catch (err) {
@@ -41,10 +51,10 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="text-center text-3xl font-bold text-gray-900">
-            Admin Login
+            Login
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            My Terazo Dashboard
+            My Terazo
           </p>
         </div>
 
@@ -62,7 +72,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="admin@myterazo.com"
+                placeholder="email@example.com"
               />
             </div>
 
@@ -89,12 +99,25 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="bg-blue-50 p-4 rounded-md">
-            <p className="text-xs text-blue-800">
-              <strong>Demo credentials:</strong><br />
-              Email: admin@myterazo.com<br />
-              Password: admin123
-            </p>
+          <div className="bg-blue-50 p-4 rounded-md space-y-3">
+            <div>
+              <p className="text-xs font-semibold text-blue-900 mb-1">
+                🔑 Demo Admin:
+              </p>
+              <p className="text-xs text-blue-800">
+                Email: admin@myterazo.com<br />
+                Password: admin123
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-blue-900 mb-1">
+                👤 Demo User:
+              </p>
+              <p className="text-xs text-blue-800">
+                Email: user@myterazo.com<br />
+                Password: user123
+              </p>
+            </div>
           </div>
 
           <div>
