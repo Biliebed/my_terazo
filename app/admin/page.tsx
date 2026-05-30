@@ -3,7 +3,42 @@
 import { useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
-import { Product, Order, getProducts, createProduct, updateProduct, deleteProduct, getOrders, updateOrder, markAllOrdersAsRead } from '@/lib/storage';
+
+// Types
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+  category: string;
+  discount?: number;
+  createdAt: string;
+}
+
+interface OrderItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  items: OrderItem[];
+  total: number;
+  status: 'pending' | 'paid' | 'processing' | 'shipped' | 'completed' | 'cancelled';
+  paymentMethod: 'transfer' | 'cod' | 'cash';
+  paymentProof?: string | null;
+  notes?: string | null;
+  isRead?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
@@ -14,6 +49,7 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Form states
   const [formData, setFormData] = useState({
@@ -38,20 +74,33 @@ export default function AdminPage() {
   }, [activeTab]);
 
   const loadProducts = async () => {
-    const data = getProducts();
-    setProducts(data);
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
+      alert('❌ Gagal memuat produk');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadOrders = async () => {
-    const data = getOrders();
-    const sorted = data.sort((a: Order, b: Order) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    setOrders(sorted);
-    
-    // Mark all orders as read when viewing orders tab
-    if (activeTab === 'orders') {
-      markAllOrdersAsRead();
+    try {
+      const response = await fetch('/api/orders');
+      if (response.ok) {
+        const data = await response.json();
+        const sorted = data.sort((a: Order, b: Order) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setOrders(sorted);
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error);
     }
   };
 
@@ -149,25 +198,35 @@ export default function AdminPage() {
       stock: parseInt(formData.stock),
       image: formData.image,
       category: formData.category,
-      discount: formData.discount ? parseFloat(formData.discount) : undefined,
+      discount: formData.discount ? parseFloat(formData.discount) : 0,
     };
 
     try {
       if (editingProduct) {
-        // Update
-        console.log('Updating product:', productData);
-        const updated = updateProduct(editingProduct.id, productData);
+        // Update via API
+        const response = await fetch(`/api/admin/products?id=${editingProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
         
-        if (!updated) {
+        if (!response.ok) {
           throw new Error('Failed to update product');
         }
         
         alert('✅ Produk berhasil diupdate!');
       } else {
-        // Create
-        console.log('Creating product:', productData);
-        const created = createProduct(productData);
-        console.log('Product created:', created);
+        // Create via API
+        const response = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create product');
+        }
+        
         alert('✅ Produk berhasil ditambahkan!');
       }
 
@@ -205,13 +264,40 @@ export default function AdminPage() {
   const handleDeleteProduct = async (id: string) => {
     if (!confirm('Yakin ingin menghapus produk ini?')) return;
     
-    deleteProduct(id);
-    loadProducts();
+    try {
+      const response = await fetch(`/api/admin/products?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+      
+      alert('✅ Produk berhasil dihapus!');
+      loadProducts();
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('❌ Gagal menghapus produk');
+    }
   };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    updateOrder(orderId, { status: newStatus });
-    loadOrders();
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update order');
+      }
+      
+      loadOrders();
+    } catch (error) {
+      console.error('Update order error:', error);
+      alert('❌ Gagal update status pesanan');
+    }
   };
 
   const getStatusBadge = (status: string) => {
